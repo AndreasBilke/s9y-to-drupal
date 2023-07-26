@@ -1,10 +1,11 @@
-from article import Article
+from ..data import Article
+from collections.abc import Iterator
 import datetime
 import psycopg
 import os
 
 
-def load_articles() -> Article:
+def load_articles() -> Iterator[Article]:
     user = os.getenv("DB_USER", "postgres")
     password = os.getenv("DB_PASSWORD")
     host = os.getenv("DB_HOST", "localhost")

@@ -9,7 +9,7 @@ sources = ["src"]
 [project]
 name = "s9y-export-dupral-import"
 version = "0.0.1"
-description = "A package for exporting s9y database entries and imports them (via REST API) to dupral."
+description = "A package for exporting s9y articles from db dump and imports them (via API) to dupral."
 authors = [
   { name = "Andreas Bilke", email = "andreas@bilke.org" },
 ]
@@ -22,5 +22,6 @@ classifiers = [
 requires-python = ">=3.7"
 dependencies = [
     "dotenv",
-    "psycopg"
+    "psycopg>=3",
+    "requests"
 ]
