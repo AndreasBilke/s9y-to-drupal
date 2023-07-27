@@ -13,9 +13,11 @@ if __name__ == '__main__':
         drupal_user_password=os.getenv("DRUPAL_USER_PASSWORD")
     )
 
+    s9y_upload_folder = os.getenv("S9Y_UPLOADS_FOLDER")
     for article in me.load_articles():
         article.extract_s9y_files()
-        article.replace_file_urls(os.getenv("S9Y_UPLOADS_FOLDER"))
+        article.replace_file_urls(s9y_upload_folder)
 
-        uuid = api.create_article_skeleton(article)
-        print("Created article <{}> in Drupal with uuid {}".format(article.title, uuid))
+        api.create_article_skeleton(article)
+        api.upload_files(article, s9y_upload_folder)
+        print("Created article <{}> in Drupal with uuid {}".format(article.title, article.uuid))

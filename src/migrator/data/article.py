@@ -12,10 +12,22 @@ class File:
     ext: str
     is_thumb: bool
 
+    drupal_url: str | None
+
     def __init__(self, name: str, ext: str, is_thumb: bool):
         self.name = name
         self.ext = ext
         self.is_thumb = is_thumb
+
+        self.drupal_url = None
+
+    def original_file_name(self) -> str:
+        if self.is_thumb:
+            original_file_name = "{}.serendipityThumb.{}".format(self.name, self.ext)
+        else:
+            original_file_name = "{}.{}".format(self.name, self.ext)
+
+        return original_file_name
 
 
 @dataclass()
@@ -28,6 +40,8 @@ class Article:
     extended_body: str
     files: list[File]  # list of filenames which are used in this article
 
+    uuid: str | None  # UUID for article in drupal
+
     def __init__(self, title: str, created_at: datetime.datetime, body: str, extended_body: str):
         self.title = title
         self.created_at = created_at
@@ -35,6 +49,8 @@ class Article:
         self.extended_body = extended_body
 
         self.files = list()
+
+        self.uuid = None
 
     def extract_s9y_files(self):
         thumbnail_pattern = r"[\"']\/uploads\/(\w+)\.serendipityThumb\.(\w+)[\"']"
@@ -68,13 +84,12 @@ class Article:
         bogus_files = []
 
         for file in self.files:
+            original_file_name = file.original_file_name()
+            http_path = "/uploads/{}".format(original_file_name)
+
             if file.is_thumb:
-                original_file_name = "{}.serendipityThumb.{}".format(file.name, file.ext)
-                http_path = "/uploads/{}".format(original_file_name)
                 replace_prefix = "<IMAGE_URL_THUMBNAIL>"
             else:
-                original_file_name = "{}.{}".format(file.name, file.ext)
-                http_path = "/uploads/{}".format(original_file_name)
                 replace_prefix = "<IMAGE_URL>"
 
             image_path = "{}/{}.{}".format(replace_prefix, file.name, file.ext)
