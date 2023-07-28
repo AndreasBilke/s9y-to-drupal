@@ -1,5 +1,8 @@
 # S9Y to Drupal Exporter
 
+> **Note**
+> This tool is still under development and not finished
+
 This program helps in migrating a current s9y installation (as of writing: 2.4.0)
 to a freshly created Drupal 10 instance.
 
