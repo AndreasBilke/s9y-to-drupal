@@ -1,11 +1,30 @@
+import argparse
+from datetime import date, datetime, timedelta
+from dotenv import load_dotenv
 import os
 
-from dotenv import load_dotenv
 import migrator.exporter as me
 import migrator.importer as mi
 
 if __name__ == '__main__':
     load_dotenv()
+
+    parser = argparse.ArgumentParser(
+        prog="s9y to drupal migrator",
+        description="Extracts blog articles from a s9y database and re-creates them in drupal"
+    )
+    parser.add_argument("-f", "--date-from",
+                        default=date.today(),
+                        help="Articles with creation date larger than this date. Format YYYY-MM-DD",
+                        type=lambda s: datetime.strptime(s, "%Y-%m-%d").date()
+                        )
+    parser.add_argument("-t", "--date-to",
+                        default=date.today() + timedelta(days=1),
+                        help="Articles with creation date smaller than this date. Format YYYY-MM-DD",
+                        type=lambda s: datetime.strptime(s, "%Y-%m-%d").date()
+                        )
+
+    args = parser.parse_args()
 
     api = mi.DrupalApi(
         base_url=os.getenv("DRUPAL_URL"),
@@ -14,9 +33,11 @@ if __name__ == '__main__':
     )
 
     s9y_upload_folder = os.getenv("S9Y_UPLOADS_FOLDER")
-    for article in me.load_articles():
+    for article in me.load_articles(args.date_from, args.date_to):
         article.extract_s9y_files()
         article.replace_file_urls(s9y_upload_folder)
+
+        print("Found article <{}>".format(article.title))
 
         api.create_article_skeleton(article)
         api.upload_files(article, s9y_upload_folder)

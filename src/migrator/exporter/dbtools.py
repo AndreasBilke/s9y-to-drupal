@@ -1,11 +1,11 @@
 from ..data import Article
 from collections.abc import Iterator
-import datetime
+from datetime import date, datetime
 import psycopg
 import os
 
 
-def load_articles() -> Iterator[Article]:
+def load_articles(date_from: date, date_to: date) -> Iterator[Article]:
     user = os.getenv("DB_USER", "postgres")
     password = os.getenv("DB_PASSWORD")
     host = os.getenv("DB_HOST", "localhost")
@@ -13,7 +13,7 @@ def load_articles() -> Iterator[Article]:
 
     c = pg_connect(user, password, db, host)
 
-    for item in pg_load_article(c):
+    for item in pg_load_article(c, date_from, date_to):
         yield Article(
             title=item["title"],
             created_at=item["created_at"],
@@ -24,10 +24,17 @@ def load_articles() -> Iterator[Article]:
     c.close()
 
 
-def pg_load_article(connection) -> dict:
+def pg_load_article(connection, date_from: date, date_to: date) -> dict:
+    """ fetch all articles between creating date in the range of [from, to) """
     with connection.cursor() as entry_cursor:
+        from_timestamp = date_from.strftime("%s")
+        to_timestamp = date_to.strftime("%s")
+
         entry_cursor.execute(
-            "SELECT id, title, body, extended, timestamp FROM serendipity_entries ORDER BY last_modified DESC LIMIT 1;")
+            "SELECT id, title, body, extended, timestamp FROM serendipity_entries"
+            " WHERE timestamp >= {} AND timestamp < {}"
+            " ORDER BY last_modified DESC;".format(from_timestamp, to_timestamp)
+        )
 
         for r in entry_cursor:
             d = {
@@ -35,12 +42,13 @@ def pg_load_article(connection) -> dict:
                 "title": r[1],
                 "body": r[2],
                 "extended_body": r[3],
-                "created_at": datetime.datetime.fromtimestamp(r[4])
+                "created_at": datetime.fromtimestamp(r[4])
             }
 
             with connection.cursor() as category_cursor:
                 category_cursor.execute(
-                    "SELECT category_name FROM serendipity_entrycat as ec JOIN serendipity_category as c ON  ec.categoryid = c.categoryid WHERE ec.entryid = %s; ",
+                    "SELECT category_name FROM serendipity_entrycat as ec"
+                    " JOIN serendipity_category as c ON  ec.categoryid = c.categoryid WHERE ec.entryid = %s; ",
                     (d["id"],)
                 )
                 cats = list()
