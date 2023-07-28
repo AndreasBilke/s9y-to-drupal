@@ -1,5 +1,6 @@
 .env
 bin/
+dist/
 .idea/
 lib/
 __pycache__/

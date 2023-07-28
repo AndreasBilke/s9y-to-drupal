@@ -30,7 +30,7 @@ The following modules needs to be activated
 
 1. Extract articles (with categories) from S9Y database
 2. Extract image references from body/extended body of articles
-   1. (QS) Check for image existence in `uploads/` folder
+   1. Double check for image existence in `uploads/` folder
    2. Mark images in body/extended body such that the URLs can be rewritten later
 3. For each article (creation via API)
    1. Create article with title only (to obtain UUID of Drupal article)
@@ -43,4 +43,4 @@ The following modules needs to be activated
 
 - Install required Python dependencies (see `pyproject.toml`)
 - Copy `.env.example` to `.env` and update parameters accordingly
-- Run `python src/export-import/main.py`
+- Run `python src/main.py`

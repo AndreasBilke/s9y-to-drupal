@@ -7,9 +7,10 @@ ignore-vcs = true
 sources = ["src"]
 
 [project]
-name = "s9y-export-dupral-import"
+name = "s9y-dupral-migrator"
 version = "0.0.1"
 description = "A package for exporting s9y articles from db dump and imports them (via API) to dupral."
+readme = "README.md"
 authors = [
   { name = "Andreas Bilke", email = "andreas@bilke.org" },
 ]
@@ -25,3 +26,7 @@ dependencies = [
     "psycopg>=3",
     "requests"
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/AndreasBilke/s9y-to-drupal"
+"Bug Tracker" = "https://github.com/AndreasBilke/s9y-to-drupal/issues"
