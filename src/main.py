@@ -34,11 +34,13 @@ if __name__ == '__main__':
 
     s9y_upload_folder = os.getenv("S9Y_UPLOADS_FOLDER")
     for article in me.load_articles(args.date_from, args.date_to):
-        article.extract_s9y_files()
-        article.replace_file_urls(s9y_upload_folder)
+        try:
+            article.extract_s9y_files()
+            article.replace_file_urls(s9y_upload_folder)
 
-        print("Found article <{}>".format(article.title))
+            api.create_article_skeleton(article)
+            api.upload_files(article, s9y_upload_folder)
 
-        api.create_article_skeleton(article)
-        api.upload_files(article, s9y_upload_folder)
-        print("Created article <{}> in Drupal with uuid {}".format(article.title, article.uuid))
+            print("Created article <{}> in Drupal with uuid {}".format(article.title, article.uuid))
+        except Exception as e:
+            print("Error while migration article for <{}>. Message:\n{}".format(article.title, e))
