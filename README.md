@@ -38,6 +38,7 @@ The following modules needs to be activated
       Obtain image URL from API response
    3. (Local preprocessing) Rewrite image URLs in body/extended body to match Drupal URLs
    4. Update article body/extended body
+   5. Assign (and create first) tags/categories
 
 ## Tool usage
 

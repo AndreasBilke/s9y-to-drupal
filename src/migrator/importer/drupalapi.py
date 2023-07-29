@@ -9,11 +9,45 @@ class DrupalApi:
     base_url: str
     drupal_user: str
     drupal_user_password: str
+    tag_uuids = dict()
 
     def __init__(self, base_url: str, drupal_user: str, drupal_user_password: str):
         self.base_url = base_url
         self.drupal_user = drupal_user
         self.drupal_user_password = drupal_user_password
+
+        self.tag_uuids = dict()
+
+    def assign_tags(self, article: Article):
+        """ Assign tags/categories to an article """
+
+        request = {
+          "data": {
+            "type": "node--article",
+            "id": article.uuid,
+            "relationships": {
+              "field_tags": {
+                "data": [
+                    {
+                        "type": "taxonomy_term--tags",
+                        "id": self.get_tag_uuid(tag_name)
+                    } for tag_name in article.categories
+                ]
+              }
+            }
+          }
+        }
+
+        response = requests.patch(
+            "{}/jsonapi/node/article/{}".format(self.base_url, article.uuid),
+            json=request,
+            auth=(self.drupal_user, self.drupal_user_password),
+            headers={"Content-Type": "application/vnd.api+json"}
+        )
+
+        if response.status_code != 200:
+            raise Exception("Expected HTTP ok for article <{}>.\n\nServer response is\n{}"
+                            .format(article.title, response.text))
 
     def upload_files(self, article: Article, s9y_file_directory: str = ""):
         """ Uploads all files for each article """
@@ -77,7 +111,7 @@ class DrupalApi:
         """ Updates body/summary for an already created article """
 
         # In S9Y there was a body and an extended body
-        # In Drupal such an concept does not exist. It has only a body
+        # In Drupal such a concept does not exist. It has only a body
         # But: You can specify (an independent) summary block which behaves like
         # the body in s9y (seen in article list etc.)
         request = {
@@ -104,3 +138,36 @@ class DrupalApi:
         if response.status_code != 200:
             raise Exception("Expected HTTP ok for article <{}>.\n\nServer response is\n{}"
                             .format(article.title, response.text))
+
+    def get_tag_uuid(self, tag_name: str) -> str:
+        if tag_name in self.tag_uuids:
+            return self.tag_uuids[tag_name]
+
+        self.tag_uuids[tag_name] = self.create_tag_by_name(tag_name)
+        return self.tag_uuids[tag_name]
+
+    def create_tag_by_name(self, tag_name: str) -> str:
+        """ Creates a tag  """
+
+        request = {
+            "data": {
+                "type": "node--article",
+                "attributes": {
+                    "name": tag_name
+                }
+            }
+        }
+
+        response = requests.post(
+            "{}/jsonapi/taxonomy_term/tags".format(self.base_url),
+            json=request,
+            auth=(self.drupal_user, self.drupal_user_password),
+            headers={"Content-Type": "application/vnd.api+json"}
+        )
+
+        if response.status_code != 201:
+            raise Exception("Expected HTTP create for tag <{}>.\n\nServer response is\n{}"
+                            .format(tag_name, response.text))
+
+        response_json = response.json()
+        return response_json["data"]["id"]

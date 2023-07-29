@@ -18,7 +18,8 @@ def load_articles(date_from: date, date_to: date) -> Iterator[Article]:
             title=item["title"],
             created_at=item["created_at"],
             body=item["body"],
-            extended_body=item["extended_body"]
+            extended_body=item["extended_body"],
+            categories=item["categories"]
         )
 
     c.close()

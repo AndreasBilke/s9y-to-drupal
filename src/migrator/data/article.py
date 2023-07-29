@@ -39,17 +39,18 @@ class Article:
     body: str
     extended_body: str
     files: list[File]  # list of filenames which are used in this article
+    categories: list[str]
 
     uuid: str | None  # UUID for article in drupal
 
-    def __init__(self, title: str, created_at: datetime.datetime, body: str, extended_body: str):
+    def __init__(self, title: str, created_at: datetime.datetime, body: str, extended_body: str, categories: list[str]):
         self.title = title
         self.created_at = created_at
         self.body = body
         self.extended_body = extended_body
+        self.categories = categories
 
         self.files = list()
-
         self.uuid = None
 
     def replace_links(self):
