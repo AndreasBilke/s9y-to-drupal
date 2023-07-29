@@ -40,6 +40,8 @@ if __name__ == '__main__':
 
             api.create_article_skeleton(article)
             api.upload_files(article, s9y_upload_folder)
+            article.replace_links()
+            api.complete_article(article)
 
             print("Created article <{}> in Drupal with uuid {}".format(article.title, article.uuid))
         except Exception as e:

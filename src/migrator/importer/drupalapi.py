@@ -19,13 +19,15 @@ class DrupalApi:
         """ Uploads all files for each article """
 
         api_url = "{}/jsonapi/node/article/{}/field_image".format(self.base_url, article.uuid)
-        for file in article.files:
+        # we need the file index here for finding the correct URL in the server response
+        for num, file in enumerate(article.files):
+            file_name_drupal = "s9y-migration-{}".format(file.original_file_name())
             response = requests.post(
                 api_url,
                 data=open("{}/{}".format(s9y_file_directory, file.original_file_name()), "rb"),
                 auth=(self.drupal_user, self.drupal_user_password),
                 headers={
-                    "Content-Disposition": "file; filename=\"s9y-migration-{}\"".format(file.original_file_name()),
+                    "Content-Disposition": "file; filename=\"{}\")".format(file_name_drupal),
                     "Content-Type": "application/octet-stream"
                 }
             )
@@ -36,9 +38,11 @@ class DrupalApi:
 
             # get image path
             response_json = response.json()
-            path = response_json["data"][0]["attributes"]["uri"]["url"]
+            file_attributes = response_json["data"][num]["attributes"]
+            if file_attributes["filename"] != file_name_drupal:
+                raise Exception("Uploaded file <{}>, but cannot find it in server response".format(file_name_drupal))
 
-            file.drupal_url = path
+            file.drupal_url = file_attributes["uri"]["url"]
 
     def create_article_skeleton(self, article: Article):
         """ Creates an article (just with title) but returns the UUID for further usage """
@@ -68,3 +72,35 @@ class DrupalApi:
 
         response_json = response.json()
         article.uuid = response_json["data"]["id"]
+
+    def complete_article(self, article: Article):
+        """ Updates body/summary for an already created article """
+
+        # In S9Y there was a body and an extended body
+        # In Drupal such an concept does not exist. It has only a body
+        # But: You can specify (an independent) summary block which behaves like
+        # the body in s9y (seen in article list etc.)
+        request = {
+            "data": {
+                "type": "node--article",
+                "id": article.uuid,
+                "attributes": {
+                    "body": {
+                        "value": "{}\n{}".format(article.body, article.extended_body),
+                        "format": "full_html",
+                        "summary": article.body
+                    }
+                }
+            }
+        }
+
+        response = requests.patch(
+            "{}/jsonapi/node/article/{}".format(self.base_url, article.uuid),
+            json=request,
+            auth=(self.drupal_user, self.drupal_user_password),
+            headers={"Content-Type": "application/vnd.api+json"}
+        )
+
+        if response.status_code != 200:
+            raise Exception("Expected HTTP ok for article <{}>.\n\nServer response is\n{}"
+                            .format(article.title, response.text))

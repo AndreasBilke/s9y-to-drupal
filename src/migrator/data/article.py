@@ -52,6 +52,15 @@ class Article:
 
         self.uuid = None
 
+    def replace_links(self):
+        for file in self.files:
+            search_path = "{}/{}".format("<IMAGE_URL>" if not file.is_thumb else "<IMAGE_URL_THUMBNAIL>",
+                                         file.original_file_name())
+            replace_path = file.drupal_url
+
+            self.body = self.body.replace(search_path, replace_path)
+            self.extended_body = self.extended_body.replace(search_path, replace_path)
+
     def extract_s9y_files(self):
         thumbnail_pattern = r"[\"']\/uploads\/(\w+)\.serendipityThumb\.(\w+)[\"']"
 
@@ -92,7 +101,7 @@ class Article:
             else:
                 replace_prefix = "<IMAGE_URL>"
 
-            image_path = "{}/{}.{}".format(replace_prefix, file.name, file.ext)
+            image_path = "{}/{}".format(replace_prefix, file.original_file_name())
 
             self.body = self.body.replace(http_path, image_path)
             self.extended_body = self.extended_body.replace(http_path, image_path)
@@ -106,4 +115,3 @@ class Article:
 
         for bogus_file in bogus_files:
             self.files.remove(bogus_file)
-
