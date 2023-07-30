@@ -33,8 +33,8 @@ def pg_load_article(connection, date_from: date, date_to: date) -> dict:
 
         entry_cursor.execute(
             "SELECT id, title, body, extended, timestamp FROM serendipity_entries"
-            " WHERE timestamp >= {} AND timestamp < {}"
-            " ORDER BY last_modified DESC;".format(from_timestamp, to_timestamp)
+            " WHERE timestamp >= %s AND timestamp < %s"
+            " ORDER BY last_modified DESC;", (from_timestamp, to_timestamp)
         )
 
         for r in entry_cursor:
