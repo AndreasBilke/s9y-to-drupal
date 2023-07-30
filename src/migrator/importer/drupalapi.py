@@ -143,8 +143,35 @@ class DrupalApi:
         if tag_name in self.tag_uuids:
             return self.tag_uuids[tag_name]
 
-        self.tag_uuids[tag_name] = self.create_tag_by_name(tag_name)
+        remote_uuid = self.get_tag_by_name(tag_name)
+        if remote_uuid is None:
+            self.tag_uuids[tag_name] = self.create_tag_by_name(tag_name)
+        else:
+            self.tag_uuids[tag_name] = remote_uuid
+
         return self.tag_uuids[tag_name]
+
+    def get_tag_by_name(self, tag_name: str) -> str | None:
+        """ Fetch UUID of a tag """
+
+        response = requests.get(
+            "{}/jsonapi/taxonomy_term/tags".format(self.base_url),
+            params={"filter[name]": tag_name},
+            headers={"Content-Type": "application/vnd.api+json"}
+        )
+        if not response.ok:
+            return None
+
+        response_json = response.json()
+        found_tags = response_json["data"]
+        if len(found_tags) != 1:
+            return None
+
+        remote_name = found_tags[0]["attributes"]["name"]
+        if remote_name != tag_name:
+            return None
+
+        return found_tags[0]["id"]
 
     def create_tag_by_name(self, tag_name: str) -> str:
         """ Creates a tag  """
