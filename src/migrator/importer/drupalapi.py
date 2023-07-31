@@ -9,7 +9,9 @@ class DrupalApi:
     base_url: str
     drupal_user: str
     drupal_user_password: str
-    tag_uuids = dict()
+
+    tag_uuids: dict[str, str]
+    author_uuid: dict[str, str]
 
     def __init__(self, base_url: str, drupal_user: str, drupal_user_password: str):
         self.base_url = base_url
@@ -17,6 +19,7 @@ class DrupalApi:
         self.drupal_user_password = drupal_user_password
 
         self.tag_uuids = dict()
+        self.author_uuids = dict()
 
     def assign_tags(self, article: Article):
         """ Assign tags/categories to an article """
@@ -89,6 +92,14 @@ class DrupalApi:
                     # TODO I'm cheating here because I know the TZ offset for my instances
                     "created": article.created_at.strftime("%Y-%m-%dT%H:%M:%S+02:00"),
                     "body": {}
+                },
+                "relationships": {
+                    "uid": {
+                        "data": {
+                            "type": "user--user",
+                            "id": self.get_author_uuid(article.author)
+                        }
+                    }
                 }
             }
         }
@@ -187,6 +198,29 @@ class DrupalApi:
 
         response_json = response.json()
         return response_json["data"]["id"]
+
+    def get_author_uuid(self, author: str) -> str:
+        if author in self.author_uuids:
+            return self.author_uuids[author]
+
+        remote_uuid = self.get_author_by_name(author)
+        if remote_uuid is None:
+            raise Exception("Could not find author <{}> in Drupal instance".format(author))
+
+        self.author_uuids[author] = remote_uuid
+        return self.author_uuids[author]
+
+    def get_author_by_name(self, author: str) -> str | None:
+        """ Fetch UUID of an author """
+
+        response = requests.get(
+            "{}/jsonapi/user/user".format(self.base_url),
+            params={"filter[name]": author},
+            auth=(self.drupal_user, self.drupal_user_password),
+            headers={"Content-Type": "application/vnd.api+json"}
+        )
+
+        return DrupalApi.extract_uuid_by_name(author, response)
 
     @staticmethod
     def extract_uuid_by_name(author: str, response: requests.Response) -> str | None:

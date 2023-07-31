@@ -28,7 +28,7 @@ The following modules needs to be activated
 
 ## Workflow
 
-1. Extract articles (with categories) from S9Y database
+1. Extract articles (including author, assigned categories) from S9Y database
 2. Extract image references from body/extended body of articles
    1. Double check for image existence in `uploads/` folder
    2. Mark images in body/extended body such that the URLs can be rewritten later

@@ -16,6 +16,7 @@ def load_articles(date_from: date, date_to: date) -> Iterator[Article]:
     for item in pg_load_article(c, date_from, date_to):
         yield Article(
             title=item["title"],
+            author=item["author"],
             created_at=item["created_at"],
             body=item["body"],
             extended_body=item["extended_body"],
@@ -27,12 +28,15 @@ def load_articles(date_from: date, date_to: date) -> Iterator[Article]:
 
 def pg_load_article(connection, date_from: date, date_to: date) -> dict:
     """ fetch all articles between creating date in the range of [from, to) """
+
     with connection.cursor() as entry_cursor:
         from_timestamp = date_from.strftime("%s")
         to_timestamp = date_to.strftime("%s")
 
         entry_cursor.execute(
-            "SELECT id, title, body, extended, timestamp FROM serendipity_entries"
+            "SELECT id, title, body, extended, timestamp, sa.username FROM serendipity_entries as se"
+            " JOIN serendipity_authors as sa"
+            " ON se.authorid = sa.authorid"
             " WHERE timestamp >= %s AND timestamp < %s"
             " ORDER BY last_modified DESC;", (from_timestamp, to_timestamp)
         )
@@ -40,6 +44,7 @@ def pg_load_article(connection, date_from: date, date_to: date) -> dict:
         for r in entry_cursor:
             d = {
                 "id": r[0],
+                "author": r[5],
                 "title": r[1],
                 "body": r[2],
                 "extended_body": r[3],

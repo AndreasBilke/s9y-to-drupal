@@ -35,6 +35,7 @@ class Article:
     """Represents an article within a blog"""
 
     title: str
+    author: str
     created_at: datetime.datetime
     body: str
     extended_body: str
@@ -43,8 +44,10 @@ class Article:
 
     uuid: str | None  # UUID for article in drupal
 
-    def __init__(self, title: str, created_at: datetime.datetime, body: str, extended_body: str, categories: list[str]):
+    def __init__(self, title: str, author: str, created_at: datetime.datetime,
+                 body: str, extended_body: str, categories: list[str]):
         self.title = title
+        self.author = author
         self.created_at = created_at
         self.body = body
         self.extended_body = extended_body
