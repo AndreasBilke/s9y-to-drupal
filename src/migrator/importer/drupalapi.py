@@ -159,19 +159,8 @@ class DrupalApi:
             params={"filter[name]": tag_name},
             headers={"Content-Type": "application/vnd.api+json"}
         )
-        if not response.ok:
-            return None
 
-        response_json = response.json()
-        found_tags = response_json["data"]
-        if len(found_tags) != 1:
-            return None
-
-        remote_name = found_tags[0]["attributes"]["name"]
-        if remote_name != tag_name:
-            return None
-
-        return found_tags[0]["id"]
+        return DrupalApi.extract_uuid_by_name(tag_name, response)
 
     def create_tag_by_name(self, tag_name: str) -> str:
         """ Creates a tag  """
@@ -198,3 +187,22 @@ class DrupalApi:
 
         response_json = response.json()
         return response_json["data"]["id"]
+
+    @staticmethod
+    def extract_uuid_by_name(author: str, response: requests.Response) -> str | None:
+        if not response.ok:
+            return None
+
+        response_json = response.json()
+        found_data = response_json["data"]
+
+        # The query resulted in multiple data sets, which was not expected
+        # Items should be unique
+        if len(found_data) != 1:
+            return None
+
+        remote_name = found_data[0]["attributes"]["name"]
+        if remote_name != author:
+            return None
+
+        return found_data[0]["id"]
