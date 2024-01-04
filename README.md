@@ -25,6 +25,11 @@ The following modules needs to be activated
 
 - Json API (activate create/delete/patch capabilities)
 - HTTP Basic Auth (used user needs admin access to Drupal)
+- Enable Full-HTML Support for article fields
+  - See `/admin/structure/types/manage/article/fields/node.article.body`
+- Enable unlimited number of images for article field_image
+  - See `/admin/structure/types/manage/article/fields/node.article.field_image`
+- If needed: Hide full field_image list at the beginning of the article (since you are embedding it on your own)
 
 ## Workflow
 
