@@ -122,9 +122,10 @@ class DrupalApi:
         """ Updates body/summary for an already created article """
 
         # In S9Y there was a body and an extended body
-        # In Drupal such a concept does not exist. It has only a body
+        # In Drupal such a concept does not exist the same way. It has only a body
         # But: You can specify (an independent) summary block which behaves like
         # the body in s9y (seen in article list etc.)
+        # Here we concat s9y body/extended body and let drupal do the summary creation on its own
         request = {
             "data": {
                 "type": "node--article",
@@ -132,8 +133,7 @@ class DrupalApi:
                 "attributes": {
                     "body": {
                         "value": "{}\n{}".format(article.body, article.extended_body),
-                        "format": "full_html",
-                        "summary": article.body
+                        "format": "full_html"
                     }
                 }
             }
